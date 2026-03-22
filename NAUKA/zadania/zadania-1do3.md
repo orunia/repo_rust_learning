@@ -1,0 +1,9 @@
+1. Napisz funkcję `skrajne_wartosci`, która przyjmuje jako argument tablicę pięciu liczb typu `i32`. Funkcja ma zwracać krotkę (tuple) zawierającą pierwszy i ostatni element z tej tablicy. W bloku `main` stwórz tablicę, przekaż ją do funkcji i wypisz zwróconą krotkę.
+
+2. Zmodyfikuj grę w zgadywanie liczb. Wprowadź licznik prób, który pozwala na maksymalnie 5 strzałów. Jeśli gracz zgadnie, wypisz "Wygrałeś!" i zakończ. Jeśli gracz nie zgadnie po 5 próbach, program ma przerwać pętlę i wypisać komunikat: "Przegrałeś. Poszukiwana liczba to: [wartość]".
+
+3. Napisz program, który pobiera od użytkownika jedną liczbę z klawiatury (wykorzystaj kod z `stdin()` i parsowanie do `i32`). Następnie przekaż tę liczbę do osobnej funkcji `pomnoz_przez_dwa`. Funkcja ta musi przyjmować parametr `i32` i zwracać `i32`, wykorzystując wyrażenie blokowe `{ ... }` niezakończone średnikiem. Wypisz ostateczny wynik w funkcji `main`.dd
+
+4. Napisz funkcję `stworz_krotke`, która przyjmuje trzy liczby zmiennoprzecinkowe typu `f64`. Funkcja ma zwrócić krotkę (tuple) zawierającą te trzy liczby, używając wyrażenia (bez średnika na końcu). W bloku `main` wywołaj tę funkcję, a następnie użyj destrukturyzacji (np. `let (x, y, z) = ...`), aby rozdzielić otrzymaną krotkę na trzy osobne zmienne i wypisać jedną z nich na ekran.
+
+5. Napisz program z pętlą `loop`, który pobiera od użytkownika liczbę z klawiatury (do typu `i32`). Użyj instrukcji `match` dla parsowania, by w razie błędu pominąć iterację (`continue`). Zdefiniuj funkcję `dodaj_dziesiec`, która przyjmuje `i32` i zwraca wartość o 10 większą. Wewnątrz pętli przekaż wpisaną liczbę do tej funkcji i wypisz wynik. Jeżeli użytkownik wpisze dokładnie liczbę 0, przerwij pętlę za pomocą `break`.

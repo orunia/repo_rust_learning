@@ -1,0 +1,161 @@
+# 🦀 Rust Blockchain Engineering Roadmap (Advanced)
+
+> **Status:** Ścieżka dla programisty znającego podstawy Rust (Backend) i Flutter (Mobile).
+> **Cel:** Specjalizacja w inżynierii blockchain (Solana, Substrate, ZK) oraz niskopoziomowym Rust (`no_std`).
+
+---
+
+## 1. ŚCIEŻKA EDUKACYJNA
+
+### Moduł 1: Rust Niskopoziomowy i Środowisko Wasm (`no_std`)
+**Czas:** 3-4 tygodnie
+**Cel:** Zrozumienie ograniczeń środowiska blockchain (brak systemu operacyjnego, determinizm, ograniczony stos).
+
+1.  **Środowisko `#![no_std]` i Core Lib**
+    * Blockchainy (Solana, Polkadot, CosmWasm) nie mają dostępu do biblioteki standardowej (`std`). Musisz nauczyć się żyć bez `String` (używając `heapless` lub `alloc`) i bez `Vec` w tradycyjnym sensie.
+    * *Kluczowe pojęcia:* `core::fmt`, `panic_handler`, Crate `heapless` (struktury na stosie), Crate `alloc` (ręczne zarządzanie stertą).
+    * *Materiały:*
+        * [The Embedded Rust Book: A no_std Environment](https://docs.rust-embedded.org/book/intro/no-std.html)
+        * [Writing an OS in Rust](https://os.phil-opp.com/freestanding-rust-binary/)
+        * [Dokumentacja Crate `heapless`](https://docs.rs/heapless/latest/heapless/)
+
+2.  **WebAssembly (Wasm) jako Maszyna Wirtualna**
+    * Większość blockchainów kompiluje Rust do Wasm. Musisz rozumieć mapowanie instrukcji, minimalizację rozmiaru (bloat) i liniową pamięć.
+    * *Kluczowe pojęcia:* `wasm32-unknown-unknown`, Linear Memory, Host Functions, `wee_alloc`, optymalizacja `wasm-opt`.
+    * *Materiały:*
+        * [Rust and WebAssembly Book](https://rustwasm.github.io/docs/book/)
+        * [Fermyon: WebAssembly Memory Layout](https://www.fermyon.com/blog/webassembly-memory-layout)
+
+3.  **Procedural Macros (Metaprogramowanie)**
+    * Frameworki (Anchor, FRAME) opierają się na makrach generujących kod. Musisz umieć je czytać i pisać.
+    * *Kluczowe pojęcia:* Token Streams, AST, `syn` (parsowanie), `quote` (generowanie), Makra atrybutów (`#[program]`) vs Derive (`#[derive(Accounts)]`).
+    * *Materiały:*
+        * [Proc Macro Workshop (GitHub)](https://github.com/dtolnay/proc-macro-workshop)
+        * [The Little Book of Rust Macros](https://veykril.github.io/tlborm/)
+        * [Dokumentacja `syn`](https://docs.rs/syn/latest/syn/)
+
+#### 🛠️ Zadania Praktyczne (Moduł 1)
+* 🟢 **Łatwy: Custom Panic Handler** – Napisz program `#![no_std]` kompilowany do Wasm z własną obsługą `panic` (np. pętla nieskończona "trap"), bez wypisywania na ekran.
+* 🟢 **Łatwy: Fixed-Size Buffer** – Stwórz strukturę działającą jak `Vector`, ale na stałej tablicy na stosie (metody `push`/`pop`).
+* 🟢 **Łatwy: Wasm Adder** – Funkcja Rust skompilowana do `.wasm`, wywoływana z JS, dodająca dwie liczby.
+* 🟡 **Średni: JSON Parser bez alokacji** – Użyj `serde_json_core` do parsowania JSON do struktur Rust używając tylko `&str` i tablic (zero-copy).
+* 🟡 **Średni: Macro `Helper`** – Napisz makro derive, które generuje metodę `describe()` zwracającą nazwę struktury jako string.
+* 🟡 **Średni: Tiny Allocator** – Zaimplementuj prosty Bump Allocator dla Wasm, aby umożliwić użycie `Box<T>`.
+* 🔴 **Trudny: DSL dla Smart Kontraktu** – Makro proceduralne przyjmujące kod `contract { fn transfer()... }` i generujące poprawny kod Rust (mini-Anchor).
+* 🔴 **Trudny: Interpreter Stack Machine** – Maszyna wirtualna w `no_std` wykonująca 5 instrukcji (PUSH, POP, ADD, SUB, PRINT).
+* 🔴 **Trudny: FFI Bridge** – Ręczne przekazanie złożonej struktury (np. listy użytkowników) z JS do Wasm, zarządzając wskaźnikami pamięci.
+
+---
+
+### Moduł 2: Architektura Solana & Anchor (Smart Contracts)
+**Czas:** 4-6 tygodni
+**Cel:** Budowanie programów na modelu kont (Account Model) i frameworku Anchor.
+
+1.  **Model Kont Solany (Account Model)**
+    * Program w Solanie jest bezstanowy. Dane są w kontach, za które płaci się czynsz (Rent).
+    * *Kluczowe pojęcia:* `AccountInfo`, Lamports, Owner, Executable flag, Rent Exemption, Realloc.
+    * *Materiały:*
+        * [Solana Docs: Account Model](https://docs.solanalabs.com/implemented-proposals/account-model)
+        * [Pencilflip's Solana Mental Model](https://twitter.com/pencilflip)
+
+2.  **Anchor Framework i PDA**
+    * Standard branżowy. Kluczowe są PDA (Program Derived Addresses) – adresy kontrolowane deterministycznie przez program.
+    * *Kluczowe pojęcia:* Seeds, Bump seed, `#[account]`, Context, Signer vs Account, System Program.
+    * *Materiały:*
+        * [The Anchor Book](https://book.anchor-lang.com/)
+        * [Solana Cookbook: PDA](https://solanacookbook.com/core-concepts/pdas.html)
+
+3.  **CPI (Cross-Program Invocations) i Tokeny**
+    * Wywoływanie innych kontraktów i "podpisywanie" transakcji przez program (Seeds).
+    * *Kluczowe pojęcia:* `CpiContext`, `invoke_signed`, SPL Token (Mint, Account, Transfer), ATA.
+    * *Materiały:*
+        * [Solana Program Library (SPL) Docs](https://spl.solana.com/)
+        * [PaulX: Solana Escrow Tutorial](https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/)
+
+#### 🛠️ Zadania Praktyczne (Moduł 2)
+* 🟢 **Łatwy: Notatnik on-chain** – Kontrakt pozwalający utworzyć konto i zapisać w nim tekst. Każda edycja aktualizuje stan.
+* 🟢 **Łatwy: Kalkulator on-chain** – Funkcje `add`, `sub`, `mul`, `div`. Wynik zapisywany w stanie konta.
+* 🟢 **Łatwy: Prosty Transfer SOL** – Kontrakt przyjmujący wpłatę i automatycznie przekazujący 10% "podatku" na adres dewelopera.
+* 🟡 **Średni: System Głosowania** – Tworzenie tematów, głosowanie Za/Przeciw, zliczanie w PDA. Blokada wielokrotnego głosowania.
+* 🟡 **Średni: Własny Token SPL** – Kontrakt pozwalający wybić (mint) tokeny tylko po wpłacie SOL do skarbca.
+* 🟡 **Średni: Vault z Czasową Blokadą** – Wpłata tokenów możliwa do wypłaty dopiero po czasie X (użycie `Clock::get()`).
+* 🔴 **Trudny: Stake Pool** – Wpłata tokenów X w zamian za "kwit". Tokeny zarabiają (symulacja). Wypłata zwraca więcej X. Wymaga matematyki udziałów.
+* 🔴 **Trudny: NFT Marketplace (Core)** – Wystawienie (transfer do PDA), Kupno (wymiana SOL na NFT), Anulowanie.
+* 🔴 **Trudny: Governance DAO** – Tworzenie propozycji, głosowanie tokenami, automatyczne wykonanie instrukcji (CPI) po przegłosowaniu.
+
+---
+
+### Moduł 3: Budowa Blockchaina (Substrate/Polkadot)
+**Czas:** 4-6 tygodni
+**Cel:** Budowa własnego łańcucha (AppChain) i runtime'u.
+
+1.  **Runtime i Palety (Pallets)**
+    * Runtime to "mózg" łańcucha składający się z modułów (Palet). Definiujesz Storage i Calls.
+    * *Kluczowe pojęcia:* `FRAME`, `Config` trait, `DeclStorage`, `DeclModule`, Events, Errors, Hooks (`on_initialize`).
+    * *Materiały:*
+        * [Substrate Developer Hub: Build a Pallet](https://docs.substrate.io/tutorials/build-application-logic/)
+        * [Substrate Recipes](https://github.com/substrate-developer-hub/recipes)
+
+2.  **Konsensus i Finalność**
+    * Rozróżnienie tworzenia bloków (Authoring) od zatwierdzania (Finality).
+    * *Kluczowe pojęcia:* Hybrid Consensus, Slots, Epochs, Session keys, Validators.
+    * *Materiały:*
+        * [Polkadot Wiki: Consensus](https://wiki.polkadot.network/docs/learn-consensus)
+        * [Substrate Docs: Consensus](https://docs.substrate.io/fundamentals/consensus/)
+
+3.  **Ekonomia Tokena i Wagi (Weights)**
+    * Ochrona przed DDoS. Każda operacja musi mieć wyliczony koszt (Weight).
+    * *Kluczowe pojęcia:* Weight Benchmarking, Transaction Fees, Byte Fee, Weight Classes.
+    * *Materiały:*
+        * [Substrate Docs: Transaction Weights](https://docs.substrate.io/build/tx-weights-fees/)
+        * [Benchmarking Pallets Tutorial](https://docs.substrate.io/tutorials/work-with-pallets/benchmark-a-pallet/)
+
+#### 🛠️ Zadania Praktyczne (Moduł 3)
+* 🟢 **Łatwy: Paleta "Nicknames"** – Przypisanie unikalnego stringa do adresu konta.
+* 🟢 **Łatwy: Proof of Existence** – Zapisywanie hasha pliku w blockchainie jako dowód istnienia w czasie.
+* 🟢 **Łatwy: Sudo Upgrade** – Uruchomienie węzła i wykonanie aktualizacji Runtime'u bez forka (Forkless Upgrade).
+* 🟡 **Średni: Paleta "Pay-to-View"** – A szyfruje dane, B płaci, A ujawnia klucz. Łańcuch weryfikuje płatność.
+* 🟡 **Średni: Custom Currency** – Własna implementacja tokena (mapa sald, transfer, mint, burn) bez użycia gotowej palety `Balances`.
+* 🟡 **Średni: Reputation System** – Punkty za transakcje, które maleją z czasem (logika w `on_initialize`).
+* 🔴 **Trudny: Quadratic Funding Pallet** – Mechanizm finansowania społecznościowego (matching funds) z zaawansowaną arytmetyką.
+* 🔴 **Trudny: Off-chain Workers** – Paleta pobierająca cenę Bitcoina z zewnętrznego API HTTP i zapisująca ją w stanie (Oracle).
+* 🔴 **Trudny: Benchmarking** – Napisanie testów wydajnościowych dla własnej waluty i wygenerowanie pliku `weights.rs`.
+
+---
+
+### Moduł 4: Kryptografia Zero-Knowledge (ZK)
+**Czas:** 4-8 tygodni
+**Cel:** Tworzenie dowodów poprawności obliczeń bez ujawniania danych.
+
+1.  **Arytmetyzacja (R1CS i Plonkish)**
+    * Zamiana programu na system ograniczeń (równania matematyczne).
+    * *Kluczowe pojęcia:* Finite Fields, Witness, Public Input, Constraints, Trusted Setup.
+    * *Materiały:*
+        * [The RareSkills Book of ZK](https://www.rareskills.io/zk-book)
+        * [Vitalik: QAP from Zero to Hero](https://medium.com/@VitalikButerin/quadratic-arithmetic-programs-from-zero-to-hero-f6d558cea649)
+
+2.  **Frameworki ZK w Rust (`Arkworks` / `Halo2`)**
+    * Praktyczna implementacja obwodów. Halo2 to standard przemysłowy.
+    * *Kluczowe pojęcia:* Prover, Verifier, Circuit definition, Gadgets (np. hash function).
+    * *Materiały:*
+        * [Arkworks Documentation](https://github.com/arkworks-rs/algebra)
+        * [Halo2 Book](https://zcash.github.io/halo2/)
+        * [0xPARC Halo2 Learning Group](https://learn.0xparc.org/halo2/)
+
+3.  **Zastosowania (Privacy & Scalability)**
+    * Weryfikacja dowodów on-chain.
+    * *Kluczowe pojęcia:* Verifier Contract, ZK-Rollup, Merkle Inclusion Proof, Mixers (Tornado Cash).
+    * *Materiały:*
+        * [Tornado Cash Core Logic](https://research.auditless.com/papers/tornado-cash)
+        * [Circom Tutorial](https://docs.circom.io/) (do zrozumienia idei).
+
+#### 🛠️ Zadania Praktyczne (Moduł 4)
+* 🟢 **Łatwy: Znajomość pre-image** – Obwód (Arkworks) dowodzący: "Znam `x`, takie że `x + 5 = 10`", bez ujawniania `x`.
+* 🟢 **Łatwy: Pedersen Hash** – Zaimplementuj haszowanie w obwodzie. Udowodnij znajomość źródła hasha.
+* 🟢 **Łatwy: Prosty Verifier** – Wygeneruj dowód w Rust, zapisz do pliku, zweryfikuj innym programem.
+* 🟡 **Średni: Merkle Proof (Członkostwo)** – Udowodnij, że liść jest w drzewie, nie ujawniając ścieżki ani liścia.
+* 🟡 **Średni: Range Proof** – Udowodnij, że prywatna liczba jest w przedziale [0, 100] (na ciałach skończonych).
+* 🟡 **Średni: Sudoku Solver ZK** – Udowodnij, że znasz rozwiązanie planszy Sudoku (Public Input), nie pokazując go.
+* 🔴 **Trudny: Private Transaction (Mini-Zcash)** – System niszczenia monety i tworzenia "banknotu" (Note Commitment) z dowodem własności (Nullifier).
+* 🔴 **Trudny: ZK-Rollup (Batch)** – Zweryfikuj 10 transakcji i wygeneruj JEDEN dowód poprawności dla całej paczki.
+* 🔴 **Trudny: Recursion (Halo2)** – Napisz dowód weryfikujący inny dowód (kluczowe dla skalowalności).

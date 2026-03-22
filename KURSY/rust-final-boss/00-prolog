@@ -1,0 +1,190 @@
+Jasne, wchodzimy w tryb **Deep Dive**. To nie są już ogólniki, tylko instrukcja, którą możesz położyć na drugim monitorze i kodować linijka po linijce.
+
+Każdy z tych projektów to **jeden, konkretny problem inżynierski** wyizolowany z "ChronosGuard".
+
+---
+
+# 1. PROJEKT: "IronDiary" (Twierdza Danych)
+
+### 🎯 Cel Techniczny
+
+Skonfigurować **Szyfrowaną Bazę Danych SQLite** na urządzeniu mobilnym poprzez Rust FFI. To jest najtrudniejszy element konfiguracji środowiska (linkowanie bibliotek C pod Androida/iOS).
+
+### 🛠️ Stack Technologiczny (Dependencies)
+
+* **Rust:**
+* `rusqlite`: `{ version = "0.29", features = ["bundled-sqlcipher"] }` <--- **KLUCZOWE!** "Bundled" oznacza, że kompilator Rusta sam zbuduje bibliotekę C SQLCipher i dołączy ją do Twojej apki. Bez tego będziesz walczył z błędami linkera przez tydzień.
+* `argon2`: Do zamiany hasła użytkownika ("dupa123") na bezpieczny klucz kryptograficzny (32 bajty).
+* `zeroize`: Do czyszczenia pamięci RAM z hasła po otwarciu bazy.
+* `anyhow`: Do wygodnej obsługi błędów.
+
+
+* **Flutter:**
+* `flutter_rust_bridge`: Wersja 2.0 (zalecana) lub 1.82.
+* `path_provider`: Aby wiedzieć, gdzie na telefonie można zapisać plik `.db`.
+
+
+
+### 📝 Krok po Kroku
+
+#### Krok 1: Rust Core (Logika Bazy)
+
+1. Stwórz plik `db.rs`.
+2. Napisz funkcję `init_db(password: String, db_path: String) -> Result<()>`.
+* Najpierw użyj `Argon2`, aby wygenerować 32-bajtowy klucz z `password`.
+* Użyj `rusqlite::Connection::open(db_path)`.
+* **Magia:** Wykonaj zapytanie PRAGMA: `CONN.execute("PRAGMA key = 'twoj_klucz_z_argon2'", [])?`. To włącza szyfrowanie.
+* Stwórz tabelę: `CREATE TABLE IF NOT EXISTS entries (id INTEGER PRIMARY KEY, content TEXT, timestamp INTEGER)`.
+
+
+3. Napisz funkcję `add_entry(content: String)`.
+4. Napisz funkcję `get_entries() -> Vec<EntryStruct>`.
+
+#### Krok 2: The Bridge (FFI)
+
+1. Skonfiguruj `flutter_rust_bridge` (polecenie `flutter_rust_bridge_codegen create`).
+2. Wyeksportuj funkcje z kroku 1 w pliku `api.rs`.
+3. **Ważne:** Pamiętaj, że `sqlite` nie lubi być otwierane wielokrotnie. W Ruście musisz użyć wzorca `lazy_static` lub `OnceCell`, aby trzymać **jedno** globalne połączenie do bazy (mutexowane), albo otwierać/zamykać je przy każdym zapytaniu (wolniejsze, ale bezpieczniejsze na start).
+
+#### Krok 3: Flutter UI
+
+1. **Ekran Logowania:** Pole na hasło. Przycisk "Otwórz Pamiętnik".
+* Akcja: Pobierz ścieżkę do dokumentów (`getApplicationDocumentsDirectory`), doklej `/diary.db`. Wywołaj Rusta: `init_db(haslo, sciezka)`.
+
+
+2. **Lista:** Jeśli `init_db` zwróci `Ok`, przejdź do listy. Wyświetl wpisy pobrane z Rusta.
+
+### 🧱 Ściana, w którą uderzysz (The Wall)
+
+* **Problem:** "Linker error: undefined reference to sqlite3_key".
+* **Rozwiązanie:** Upewnij się, że w `Cargo.toml` masz flagę `bundled-sqlcipher`. Na Androidzie upewnij się, że NDK jest poprawnie skonfigurowane w `local.properties`.
+
+---
+
+# 2. PROJEKT: "Solana Signpost" (Głos w Sieci)
+
+### 🎯 Cel Techniczny
+
+Nauczyć się zarządzać kluczami prywatnymi w pamięci (nie na dysku!) i wysyłać poprawne transakcje do sieci Solana. Zrozumienie mechanizmu **RPC**.
+
+### 🛠️ Stack Technologiczny
+
+* **Rust:**
+* `solana-client`: Do komunikacji z węzłem.
+* `solana-sdk`: Do budowania transakcji i podpisywania.
+* `ed25519-dalek`: Algorytm podpisu cyfrowego używany przez Solanę.
+* `bip39`: Do generowania mnemoników (seed phrase).
+
+
+* **Flutter:**
+* `url_launcher`: Żeby otworzyć link do Solscan w przeglądarce.
+
+
+
+### 📝 Krok po Kroku
+
+#### Krok 1: Key Management (Rust)
+
+1. Funkcja `generate_wallet() -> String`. Generuje 12 słów (mnemonic).
+2. **Ważne:** Nie zapisuj tego na dysku w tym projekcie (uproszczenie). Trzymaj klucz prywatny w pamięci (RAM) dopóki aplikacja działa.
+3. Przekształć mnemonic -> Seed -> Keypair (para kluczy Solany).
+
+#### Krok 2: Transaction Builder (Rust)
+
+1. Funkcja `send_message(message: String) -> String (Signature)`.
+2. Połącz się z Devnetem: `RpcClient::new("https://api.devnet.solana.com")`.
+3. Zbuduj instrukcję. Najprościej użyć "Memo Program" (to wbudowany program Solany do notatek).
+* ID Programu Memo: `MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcQb`.
+* Instrukcja: Po prostu ciąg bajtów Twojej wiadomości.
+
+
+4. Pobierz `latest_blockhash` z sieci (transakcje muszą być świeże).
+5. Zbuduj `Transaction`, podpisz ją swoim `Keypair`.
+6. Wyślij: `client.send_and_confirm_transaction(&tx)`.
+
+#### Krok 3: Flutter UI
+
+1. Przycisk "Generuj Portfel". Wyświetla Adres Publiczny.
+2. Przycisk "Airdrop" (opcjonalnie, ale łatwiej po prostu skopiować adres i użyć kranika w przeglądarce: `solfaucet.com`).
+3. Pole tekstowe "Wpisz coś".
+4. Przycisk "Wyślij". Po sukcesie wyświetla Hash transakcji jako link.
+
+### 🧱 Ściana, w którą uderzysz (The Wall)
+
+* **Problem:** Aplikacja zamraża się (UI nie reaguje) podczas wysyłania.
+* **Rozwiązanie:** Operacje sieciowe w Ruście są synchroniczne (blokują wątek). Musisz uruchamiać funkcje Rusta w `tokio::spawn` albo upewnić się, że `flutter_rust_bridge` uruchamia je na puli wątków (domyślnie tak robi, ale warto wiedzieć).
+
+---
+
+# 3. PROJEKT: "TimeCapsule" (Zegar Zagłady)
+
+### 🎯 Cel Techniczny
+
+Zrozumienie **Anchor Framework** i modelu **PDA** (Program Derived Address). To tutaj nauczysz się, jak blockchain przechowuje stan (pieniądze i dane).
+
+### 🛠️ Stack Technologiczny
+
+* **Solana:**
+* `anchor-lang`: Framework do Smart Contractów.
+* `TypeScript`: Do testowania kontraktu (nie używamy tu Fluttera, skupiamy się na backendzie blockchainowym).
+
+
+
+### 📝 Krok po Kroku
+
+#### Krok 1: Struktura Konta (State)
+
+W pliku `lib.rs` zdefiniuj, co przechowuje Twój sejf:
+
+```rust
+#[account]
+pub struct TimeVault {
+    pub owner: Pubkey,       // Kto wpłacił (32 bajty)
+    pub unlock_time: i64,    // Kiedy można wypłacić (8 bajtów)
+    pub bump: u8,            // Potrzebne do PDA (1 bajt)
+}
+
+```
+
+#### Krok 2: Instrukcja Deposit (Wpłata)
+
+1. Argumenty: `lock_duration: i64` (ile sekund trzymać).
+2. Logika:
+* Oblicz `unlock_time = Clock::get()?.unix_timestamp + lock_duration`.
+* Zapisz dane w koncie `TimeVault`.
+* **Transfer Systemowy:** Przelej SOL z portfela Usera do konta `TimeVault` (to konto musi być PDA, żeby program mógł nim zarządzać).
+
+
+
+#### Krok 3: Instrukcja Withdraw (Wypłata)
+
+1. Logika:
+* Sprawdź, czy `Clock::get()?.unix_timestamp > ctx.accounts.vault.unlock_time`.
+* Jeśli NIE -> Zwróć błąd `ErrorCode::TooEarly`.
+* Jeśli TAK -> Wykonaj transfer z PDA z powrotem do `owner`.
+
+
+
+#### Krok 4: Testy (TypeScript)
+
+To jest Twoje "UI" w tym projekcie.
+
+1. Napisz test: "User wpłaca 1 SOL na 5 sekund".
+2. Test próbuje wypłacić od razu -> Oczekuj błędu.
+3. Test czeka 6 sekund (`await sleep(6000)`).
+4. Test próbuje wypłacić -> Oczekuj sukcesu i sprawdź saldo.
+
+### 🧱 Ściana, w którą uderzysz (The Wall)
+
+* **Problem:** "Signature verification failed" albo "PrivilegeEscalation".
+* **Rozwiązanie:** To zazwyczaj problem z PDA. Zrozumienie, czym jest `seeds = [b"vault", owner.key().as_ref()], bump` w Anchorze, jest kluczowe. PDA to konto, które nie ma klucza prywatnego – podpisuje się "programowo" przez Seeds.
+
+---
+
+### 📅 Plan Czasowy (Realistyczny)
+
+* **Tydzień 1:** **IronDiary**. Walka z konfiguracją środowiska Rust+Android. To będzie tydzień "dlaczego to nie działa?!". Ale jak zadziała `bundled-sqlcipher`, poczujesz się jak haker.
+* **Tydzień 2:** **Solana Signpost**. Nauka kryptografii asymetrycznej. Pierwsza transakcja wysłana kodem to magiczny moment.
+* **Tydzień 3:** **TimeCapsule**. Nauka Rusta on-chain (Anchor). Zrozumiesz, że Smart Contract to tak naprawdę bardzo restrykcyjny program, który zarządza czyimś kontem bankowym.
+
+Po tych 3 projektach masz wszystkie klocki ("Lokalna Baza", "Transakcje", "Logika Czasowa"), żeby zbudować **ChronosGuard** w kolejne 3 tygodnie.

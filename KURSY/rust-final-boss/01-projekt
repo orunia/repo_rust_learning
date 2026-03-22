@@ -1,0 +1,204 @@
+Masz całkowitą rację – **100 godzin to estymacja "optymistyczna" (tzw. Happy Path)**, zakładająca, że wiesz co robisz i rzadko utykasz na błędach.
+
+Jako osoba, która dopiero się uczy, będziesz spędzać 30% czasu na pisaniu kodu, a **70% na debugowaniu**, czytaniu dokumentacji i walce z konfiguracją.
+
+Dlatego **urealniamy plan**. Rozbijmy to na **250-300 godzin** (ok. 3-4 miesiące solidnej pracy po godzinach). Jeśli zrobisz to szybciej – świetnie. Jeśli zajmie 400h – też dobrze, bo to oznacza, że się nie poddałeś.
+
+Oto "ChronosGuard" rozbity na czynniki pierwsze – tak, jak zarządzałby tym Tech Lead w software house.
+
+---
+
+# 🏛️ ChronosGuard: Master Plan (Level: Hard)
+
+### 📐 Architektura Logiczna: "Dead Man's Switch"
+
+Zanim napiszesz kod, musisz zrozumieć przepływ sekretu.
+To nie jest zwykły transfer. To transfer **warunkowy**.
+
+1. **Właściciel (Alice)** szyfruje dane kluczem symetrycznym ().
+2. Alice szyfruje klucz  kluczem publicznym **Beneficjenta (Bob)**.
+3. Zaszyfrowany klucz () trafia do **Smart Kontraktu**.
+4. Smart Kontrakt trzyma  i środki (SOL).
+5. Alice musi klikać "Ping" co 30 dni.
+6. Jeśli Alice zniknie (timeout), Bob woła funkcję `claim`.
+7. Bob pobiera  z blockchaina, odszyfrowuje go swoim kluczem prywatnym, uzyskuje  i otwiera dane.
+
+---
+
+## 🗓️ SPRINT 1: Smart Contract Core (Solana Anchor)
+
+**Cel:** Logika biznesowa. Bez UI, tylko testy w TypeScript.
+**Czas:** ~40-50h
+
+1. **Konfiguracja Środowiska (5h)**
+* Zainstaluj najnowszy `anchor-cli` i `solana-cli`.
+* Uruchom `solana-test-validator` (lokalny blockchain).
+* Stwórz nowy projekt: `anchor init chronos_guard`.
+
+
+2. **Struktury Danych (Accounts) (10h)**
+* Zdefiniuj konto `VaultState`:
+```rust
+#[account]
+pub struct VaultState {
+    pub owner: Pubkey,         // Kto wpłacił?
+    pub beneficiary: Pubkey,   // Kto dziedziczy?
+    pub last_heartbeat: i64,   // Timestamp ostatniego znaku życia
+    pub timeout_period: i64,   // Np. 30 dni w sekundach
+    pub encrypted_key: Vec<u8>,// Klucz do danych (dla Boba)
+    pub sol_bump: u8,          // Do PDA (Program Derived Address)
+}
+
+```
+
+
+* Zrozum, jak działają PDA (adresy sejfu), żeby nikt nie ukradł środków.
+
+
+3. **Instrukcje (Logika) (15h)**
+* `initialize`: Tworzy sejf, zapisuje beneficjenta i zaszyfrowany klucz.
+* `ping`: Sprawdza `ctx.accounts.signer == vault.owner`. Jeśli tak -> `last_heartbeat = Clock::get()?.unix_timestamp`.
+* `claim`: Sprawdza `Clock::get()?.unix_timestamp > last_heartbeat + timeout_period`. Jeśli tak -> Transfer SOL z PDA do Beneficjenta. Jeśli nie -> Błąd `StillAlive`.
+
+
+4. **Testy (Kluczowe!) (15h)**
+* Napisz testy w TypeScript (plik `.spec.ts`).
+* *Scenario A:* Alice robi ping -> Bob próbuje ukraść -> Błąd.
+* *Scenario B:* Alice znika. Czekamy X sekund (w teście przesuwasz czas w przód). Bob woła claim -> Sukces.
+* *Debugowanie:* Tutaj spędzisz dużo czasu, rozumiejąc błędy Solany (np. `0x1` custom error).
+
+
+
+---
+
+## 🗓️ SPRINT 2: Rust Core & Cryptography (Backend)
+
+**Cel:** Logika szyfrowania i zarządzania bazą danych na telefonie.
+**Czas:** ~60-80h
+
+1. **Setup FFI (10h)**
+* Skonfiguruj `flutter_rust_bridge`.
+* Stwórz prostą funkcję `pub fn init_logger()`, wywołaj ją z Fluttera i zobacz logi w konsoli Android Studio. Jeśli to zadziała, masz z górki.
+
+
+2. **Lokalna Baza (SQLite + SQLCipher) (20h)**
+* Skonfiguruj `rusqlite` z szyfrowaniem (to jest trudne na Androidzie/iOS, wymaga linkowania bibliotek C).
+* Schema: Tabela `secrets` (id, title, encrypted_content).
+* Schema: Tabela `app_state` (owner_private_key, beneficiary_public_key).
+* **Ważne:** Baza na telefonie jest szyfrowana hasłem Alice.
+
+
+3. **Kryptografia "Hybrid Encryption" (30h)**
+* To jest serce systemu.
+* Użyj crate `age` (nowoczesne szyfrowanie) lub `chacha20poly1305` + `x25519-dalek`.
+* **Zadanie:** Napisz w Rust funkcję, która bierze "Notatkę" i Public Key Beneficjenta, a zwraca:
+1. `encrypted_note` (szyfrowane kluczem losowym ).
+2. `encrypted_key` (klucz  zaszyfrowany kluczem Beneficjenta).
+
+
+* *Dlaczego to trudne?* Musisz zarządzać typami danych, błędami kryptograficznymi i konwersją bajtów.
+
+
+4. **Integracja z Solana RPC (15h)**
+* Dodaj `solana-client` do Rusta (wersja mobile friendly, bez wielkich zależności).
+* Napisz funkcję `fetch_vault_state`, która pobiera dane z Twojego kontraktu i sprawdza, ile czasu zostało do timeoutu.
+
+
+
+---
+
+## 🗓️ SPRINT 3: Flutter UI & State Management
+
+**Cel:** Interfejs, który nie wygląda jak z lat 90.
+**Czas:** ~40-60h
+
+1. **Ekrany Podstawowe (15h)**
+* **Onboarding:** Tworzenie portfela (generowanie Seed Phrase w Rust, wyświetlanie we Flutter).
+* **Dashboard:** Wielki licznik "Dni do końca". Przycisk "I'M ALIVE".
+* **Vault Setup:** Formularz: "Adres Beneficjenta", "Czas (dni)", "Wpłata SOL".
+
+
+2. **Zarządzanie Stanem (Riverpod) (20h)**
+* Stwórz `VaultProvider`.
+* Aplikacja musi cyklicznie pytać Rust -> Solana o stan licznika.
+* Obsługa błędów: Co jeśli nie ma internetu? Co jeśli RPC Solany nie odpowiada? Wyświetl ładny "Snackbar" z błędem.
+
+
+3. **Secure Storage & Biometria (15h)**
+* Nie każ użytkownikowi wpisywać hasła za każdym razem.
+* Użyj `local_auth` (FaceID/Fingerprint) we Flutterze, aby odblokować dostęp do klucza szyfrującego bazę.
+
+
+
+---
+
+## 🗓️ SPRINT 4: Integracja "The Bridge" (Najtrudniejszy)
+
+**Cel:** Połączenie wszystkiego w całość. Tutaj wszystko wybuchnie.
+**Czas:** ~50-80h
+
+1. **Testy End-to-End na Emulatorze (30h)**
+* Próba wysłania transakcji z Androida na lokalny validator (musisz przekierować porty `adb reverse`).
+* Debugowanie FFI: "Dlaczego Rust zwraca `Vec<u8>`, a Dart widzi śmieci?".
+* Problemy z pamięcią: Aplikacja wyłącza się po zminimalizowaniu.
+
+
+2. **Scenariusz "Śmierci" (20h)**
+* To trzeba przetestować!
+* Ustaw timeout na 5 minut.
+* Alice (Telefon A) tworzy Vault.
+* Czekasz 6 minut.
+* Bob (Telefon B - lub po prostu wyczyszczone dane na tym samym) importuje swój portfel.
+* Bob klika "Claim".
+* **Wielki Finał:** Czy Bob widzi odszyfrowaną notatkę?
+
+
+3. **Polerowanie i Fixy (20h)**
+* Poprawki UI.
+* Dodanie ostrzeżeń ("Zapisz swój Seed Phrase!").
+* Generowanie ikony aplikacji.
+
+
+
+---
+
+## 🗓️ SPRINT 5: Portfolio & Dokumentacja
+
+**Cel:** Sprzedanie projektu rekruterowi.
+**Czas:** ~20h
+
+1. **README.md (10h)**
+* Opis problemu ("Co się stanie z Twoim krypto, gdy umrzesz?").
+* Diagram architektury (narysuj go w Excalidraw).
+* Instrukcja uruchomienia (dla rekrutera, choć i tak nie uruchomi).
+
+
+2. **Wideo Demo (5h)**
+* Nagraj ekran telefonu. Pokaż proces tworzenia sejfu, "śmierć" (przyspieszoną) i odbiór środków.
+* Wrzuć na YouTube/Loom i podlinkuj w CV.
+
+
+3. **Code Cleanup (5h)**
+* Uruchom `cargo fmt` i `dart format`.
+* Usuń przekleństwa z komentarzy (serio, sprawdź to :D).
+
+
+
+---
+
+### 📉 Wykres "Krzywej Bólu"
+
+* **Tydzień 1-3 (Solana):** "Wow, blockchain jest super!" (Wysoka motywacja).
+* **Tydzień 4-6 (Rust FFI):** "Dlaczego to się nie kompiluje?! Nienawidzę linkerów C++". (Dolina Śmierci - tu odpada 80% ludzi).
+* **Tydzień 7-9 (Integracja):** "Działa, ale brzydko i wolno". (Mozolna praca).
+* **Tydzień 10+ (Finał):** "To żyje! Jestem bogiem inżynierii". (Satysfakcja).
+
+### 💡 Dlaczego warto poświęcić te ~300h?
+
+Jeśli przyjdziesz na rekrutację i powiesz:
+
+> *"Napisałem smart kontrakt w Anchor, który zarządza dziedziczeniem aktywów, i połączyłem go z mobilną aplikacją we Flutterze używając Rusta do hybrydowego szyfrowania danych on-chain"*
+
+...to nie jesteś juniorem. Jesteś **Regular/Midem**, któremu po prostu brakuje komercyjnego doświadczenia.
+
+100h to czas kodowania. 300h to czas nauki przez budowanie. Powodzenia!

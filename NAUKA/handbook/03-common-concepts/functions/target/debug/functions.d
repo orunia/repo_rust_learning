@@ -1,0 +1,1 @@
+C:\Users\ikord\OneDrive\Desktop\PROJEKT\ PROGRAMISTA\nauka\03-common-concepts\functions\target\debug\functions.exe: C:\Users\ikord\OneDrive\Desktop\PROJEKT\ PROGRAMISTA\nauka\03-common-concepts\functions\src\main.rs

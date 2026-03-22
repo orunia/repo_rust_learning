@@ -1,0 +1,22 @@
+## 1. Struktura Repozytorium (Git)
+Czystość w repozytorium to podstawa.
+Utwórz plik `.gitignore` w głównym folderze projektu i wklej tam:
+
+```text
+# Rust
+target/
+**/*.rs.bk
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+.pub-cache/
+.pub/
+
+# IDE
+.idea/
+.vscode/
+*.iml

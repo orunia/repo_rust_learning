@@ -1,0 +1,1 @@
+C:\Users\ikord\OneDrive\Desktop\PROJEKT\ PROGRAMISTA\nauka\handbook\03-common-concepts\zadania1-3\target\debug\variables.exe: C:\Users\ikord\OneDrive\Desktop\PROJEKT\ PROGRAMISTA\nauka\handbook\03-common-concepts\zadania1-3\src\main.rs
