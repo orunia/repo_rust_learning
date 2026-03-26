@@ -170,4 +170,56 @@ fn main(){
     println!("{:?}", instancja);
 }*/
 
+/*ZAD 8
+struct Zgloszenie{
+    opis: String,
+}
 
+impl Zgloszenie{
+    fn pierwsze_slowo(&self) -> &str {
+        match self.opis.find(' ') {
+            Some(i) => &self.opis[..i],
+            None => &self.opis,
+        }
+    }
+}
+
+fn main(){
+    let zgloszenie = Zgloszenie {
+        opis: String::from("Haaaj guuurl"),
+    };
+
+    let wynik = zgloszenie.pierwsze_slowo();
+
+    //zgloszenie.opis.clear();
+
+    println!("{wynik}");
+}*/
+
+/*ZAD9
+#[derive(Debug)]
+struct Gracz{
+    pseudonim: String,
+    poziom: u32,
+}
+
+impl Gracz{
+    fn nowy(nick: &str) -> Self {
+        Self{
+            pseudonim: nick.to_string(),
+            poziom: 1
+        }
+    }
+}
+
+fn awansuj(gracz: &mut Gracz){
+        gracz.poziom += 1
+}
+
+fn main(){
+    let mut gracz = Gracz::nowy("Igor");
+
+    awansuj(&mut gracz);
+
+    println!("{:#?}", gracz);
+}*/
