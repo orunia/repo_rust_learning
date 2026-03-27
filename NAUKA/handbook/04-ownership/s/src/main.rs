@@ -2,7 +2,7 @@
 fn main() {
     
     let s1 = String::from("Rust");
-    wez_wlasnosc(s1.clone());
+    wez_wlasnosc(s1.clone()); // przekazujemy kopie, poniewaz string nie ma copy trait, kopia albo zostaje wypluta albo usunieta
 
     println!("{}", s1);
 }
@@ -15,11 +15,13 @@ fn wez_wlasnosc(s: String) -> String {
 /*ZAD 3
 fn main(){
     let zmienna = String::from("chuuj");
-    let dlugosc = policz_znaki(&zmienna);
+    let dlugosc = policz_znaki(&zmienna); // przekazujemy referencje niemutowalna do zmiennej, co oznacza ze jest ona tylko do odczytu
+    // jest to lepsza opcja niz clone, poniewaz nie rezerwuje dodatkowej pamieci, a przeslanie samej referencji jest darmowe
 
     println!("{zmienna} i {dlugosc}");
 }
-fn policz_znaki(tekst: &String) -> usize {
+// zwraca nam size tekstu
+fn policz_znaki(tekst: &str) -> usize {
     tekst.len()
 }
 */
@@ -27,12 +29,13 @@ fn policz_znaki(tekst: &String) -> usize {
 /*ZAD4
 fn main(){
     let mut zmienna = String::from("chuj");
-    dodaj_wykrzyknik(&mut zmienna);
+    dodaj_wykrzyknik(&mut zmienna); // dajemy referencje mutowalna, pozyczamy nasza zmienna z prawem do zapisu
     println!("{}", zmienna);
 }
 
+//funckja przyjmuje &mut String, wiec ma klucze do modyfikacji tekstu
 fn dodaj_wykrzyknik(tekst: &mut String){
-    tekst.push_str("!")
+    tekst.push_str("!") //dokleja tekst na sam koniec
 }
 */
 
@@ -51,7 +54,7 @@ fn main(){
 /*ZAD 7
 fn main(){
     let zdanie = String::from("Programowanie jest super");
-    let prog = &zdanie[0..14];
+    let prog = &zdanie[0..14]; //referencja do zmiennej, nie zmienia oryginalu, tylko daje prawo do odczytu
     let spr = &zdanie[19..24];
     println!("{prog}");
     println!("{spr}");
@@ -63,7 +66,7 @@ fn main(){
     let liczby = [10, 20, 30, 40, 50, 60];
 
     let srodek = &liczby[1..4];
-    assert_eq!(srodek, &[20, 30, 40]);
+    assert_eq!(srodek, &[20, 30, 40]); //Sprawdza, czy podane argumenty są sobie równe. Jeśli nie są, natychmiast przerywa działanie programu
 }
 */
 

@@ -1,5 +1,5 @@
 /*ZAD1
-#[derive(Debug)]
+#[derive(Debug)] // mowi kompilatorowi, zeby automatycznie generowal kod ktory pozwala wypluc cala strukture do konsoli
 struct Zamowienie {
     produkt: String,
     ilosc: u32,
@@ -7,12 +7,15 @@ struct Zamowienie {
 }
 
 fn main() {
+    // instancja struktury
     let produkt1 = Zamowienie {
         produkt: String::from("Chuj"),
         ilosc: 3,
         cena_jednostkowa: 65.99,
     };
 
+    //instancja struktury, ale tym razem zmieniamy jedna wartosc, a reszte zostaje przeniesiona z pierwszej instancji
+    // co oznacza ze produkt1 nie mozna juz uzywac
     let produkt2 = Zamowienie {
         ilosc: 5,
         ..produkt1
@@ -37,12 +40,15 @@ fn main(){
 }*/
 
 /*ZAD3
-#[derive(Debug)]
+#[derive(Debug)] // mowi kompilatorowi, zeby wygenerowal kod, ktory da sie wypluc cala strukture
 struct KontoBankowe {
     wlasciciel: String,
     saldo: i32,
 }
 
+// metody naszej struktury
+// wplac: metoda ma wejsc do srodka "skrzynki" i zmodyfikowac dane
+// wypiszsaldo: dostaje referencje do odczytu tego co jest w tej skrzynce wlasnej skrzynki
 impl KontoBankowe {
     fn wplac(&mut self, kwota: i32){
         self.saldo += kwota
@@ -120,7 +126,8 @@ fn main(){
 
     let instancja = Silnik {
         model: "okej".to_string(),
-        moc: dbg!(150 * mnoznik)
+        moc: dbg!(150 * mnoznik) //println na sterydach, przejmuje wartosc, wypisuje i zwraca z powrotem, wstrzykujemy ja w "srodek" kodu bez
+        // potrzeby przerywania go, jak jest git to idzie dalej i si
     };
 
     println!("{:#?}", instancja);
@@ -149,7 +156,7 @@ fn main(){
     println!("{prawda}");
 }*/
 
-/*ZAD7
+/*ZAD7 I 7.5
 #[derive(Debug)]
 struct TajnyDokument {
     tresc: String,
@@ -168,6 +175,24 @@ fn main(){
 
     instancja.zniszcz_i_przeczytaj();
     println!("{:?}", instancja);
+}
+    
+impl TajnyDokument {
+    // Usuwamy '&' przed self -> funkcja teraz "pożera" instancję
+    fn zniszcz_i_przeczytaj(self) -> String {
+        self.tresc // Przenosimy własność Stringa na zewnątrz
+    } // Tutaj instancja dokumentu zostaje usunięta z pamięci (drop)
+}
+
+fn main() {
+    let instancja = TajnyDokument {
+        tresc: "Tajne dane".to_string(),
+    };
+
+    let dane = instancja.zniszcz_i_przeczytaj();
+    
+    // println!("{:?}", instancja); // To by teraz wywaliło BŁĄD - dokument nie istnieje!
+    println!("Odebrane dane: {}", dane);
 }*/
 
 /*ZAD 8
@@ -177,9 +202,9 @@ struct Zgloszenie{
 
 impl Zgloszenie{
     fn pierwsze_slowo(&self) -> &str {
-        match self.opis.find(' ') {
-            Some(i) => &self.opis[..i],
-            None => &self.opis,
+        match self.opis.find(' ') { // przechodzi przez tekst w poszukiwaniu spacji
+            Some(i) => &self.opis[..i], //wycinek do spacji
+            None => &self.opis, // jezeli brak spacji, to tekst zostaje przekazany
         }
     }
 }
@@ -204,7 +229,9 @@ struct Gracz{
 }
 
 impl Gracz{
-    fn nowy(nick: &str) -> Self {
+    //funkcja stowarzyszona, sluzy do budowania obiektu od zera, zebys w main nie musial pamietac jakie pole ma strukture
+    //zwraca nam nowa strukture, dlatego w main zamiast implementacji, uzywamy tej funkcji
+    fn nowy(nick: &str) -> Self { // Self to alias na nazwe struktury
         Self{
             pseudonim: nick.to_string(),
             poziom: 1
@@ -217,9 +244,9 @@ fn awansuj(gracz: &mut Gracz){
 }
 
 fn main(){
-    let mut gracz = Gracz::nowy("Igor");
+    let mut gracz = Gracz::nowy("Igor"); // tworzy struct gracza o nazwie igor
 
-    awansuj(&mut gracz);
+    awansuj(&mut gracz); // przekazujemy gracza Igor do funkcji awansuj, ktora wchodzi do pamieci i zmienia jego poziom przy zachowaniu imienia
 
     println!("{:#?}", gracz);
 }*/
