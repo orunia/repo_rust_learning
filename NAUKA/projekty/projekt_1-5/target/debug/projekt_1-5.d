@@ -1,0 +1,1 @@
+C:\Users\ikord\OneDrive\Desktop\PROJEKT\ PROGRAMISTA\NAUKA\projekty\projekt_1-5\target\debug\projekt_1-5.exe: C:\Users\ikord\OneDrive\Desktop\PROJEKT\ PROGRAMISTA\NAUKA\projekty\projekt_1-5\src\main.rs
