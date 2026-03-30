@@ -1,3 +1,5 @@
+use std::io::stdin;
+
 #[derive(Debug)]
 struct Material {
     nazwa: String,
@@ -76,7 +78,8 @@ impl PlacBudowy{
                       i.cena_jednostkowa);
         }
 
-        oblicz_wartosc_calkowita(&self.magazyn[0..self.liczba_pozycji]);
+        let suma = oblicz_wartosc_calkowita(&self.magazyn[0..self.liczba_pozycji]);
+        println!("{:.2}", suma)
     }
 }
 
@@ -105,5 +108,67 @@ fn analizuj_wpis(surowy_tekst: &str) -> (String, u32, f64) {
 }
 
 fn main() {
-    println!("Hello, world!");
+    let mut instancja = PlacBudowy::nowy();
+
+    
+    loop{
+        println!("\n--- PANEL ZARZĄDZANIA ---");
+        println!("1 - Dodaj materiał");
+        println!("2 - Wydaj materiał");
+        println!("3 - Wygeneruj raport");
+        println!("4 - Zakończ program");
+        println!("Wybierz opcję:");
+
+        let mut wybor = String::new();
+
+        stdin()
+         .read_line(&mut wybor)
+         .expect("Failure");
+
+         let wybor: i32 = match wybor.trim().parse(){
+            Ok(num) => num,
+            Err(_) => continue
+         };
+
+         match wybor {
+            //wczytuje dane, przekazuje do analizy wpisu ktora rozpakowuje tekst
+            //do danych ktore sa zweracane do krotki, przekazanej do dodania
+            1 => { 
+                let mut dane = String::new();
+                stdin().read_line(&mut dane).expect("Blad");
+
+                let (nazwa, ilosc, cena) = analizuj_wpis(&dane);
+                instancja.dodaj(nazwa, ilosc, cena);
+            }
+
+            //pobiera z klawiatury dane, bierze caly tekst az do spacji
+            //umieszczamy w naszych zmiennych, ktore przekazane sa do wydanie
+            2 => {
+                let mut dane = String::new();
+                stdin().read_line(&mut dane).expect("Blad");
+
+                let mut czesci = dane.split_whitespace();
+
+                let nazwa = czesci.next().unwrap_or("");
+                let sztuki = czesci.next().unwrap_or("0").parse().unwrap_or(0);
+
+                instancja.wydaj(nazwa, sztuki);
+            }
+
+            3 => {
+                instancja.raport();
+            }
+
+            4 => {
+                println!("Zamykanie programu!");
+                break;
+            }
+
+            //jezeli jakas inna opcja, zwraca blad
+            _ => {
+                println!("Nie ma takiej opcji!!!");
+            }
+         }
+
+    }
 }
