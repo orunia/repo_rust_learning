@@ -6,7 +6,7 @@
 
 //kazdy wariant moze orzechowywac zupelnie inna ilosc 
 //i typ danych
-/*enum IpAddrKind{
+enum IpAddrKind{
     V4(u8, u8, u8, u8), //przechowuje 4 male liczby
     V6(String), //przechowuje ciag znakow
 }
@@ -36,7 +36,7 @@ fn main(){
 //dzieki enumowi wszystkie warianty traktowane sa jako
 //jeden wspolny typ danych
 
-/*enum Message{
+enum Message{
     Quit, // brak powiazanych danych
     Move {x: i32, y: i32}, //dane nazwane
     Write(String), //pojedynczy tekst
@@ -60,7 +60,7 @@ fn main(){
 //ze wartosc moze byc obecna lub nie. wykorzystuje do tego
 //specjalnego enuma o nazwie option
 
-/*enum Option<T>{ //<T> to typ generyczny, oznacza to ze wariant some moze przechowywac dowolny typ danych
+enum Option<T>{ //<T> to typ generyczny, oznacza to ze wariant some moze przechowywac dowolny typ danych
     None,     //brak wartosci
     Some(T),  //jest wartosc typu t
 }
@@ -108,7 +108,7 @@ fn main(){
 //wzorcow i gdy tylko wartosc dopasuje sie do wzorca, program 
 //wykonuje przypisany do niego kod bloku
 
-/*#[derive(Debug)]
+#[derive(Debug)]
 enum StanUsa{
     Alabama,
     Alaska,
@@ -186,7 +186,7 @@ fn main(){
 //poczatku
 
 //zle podejscie:
-/*fn opisz_monete(moneta: Moneta) -> Option<String> {
+fn opisz_monete(moneta: Moneta) -> Option<String> {
     if let Moneta::Quarter(stan) = moneta {
         // Główna logika jest schowana wewnątrz if let!
         if stan.istnial_w(1900) {
