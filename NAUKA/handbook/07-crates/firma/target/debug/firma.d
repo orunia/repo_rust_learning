@@ -1,0 +1,1 @@
+C:\Users\ikord\OneDrive\Desktop\PROJEKT\ PROGRAMISTA\NAUKA\handbook\07-crates\firma\target\debug\firma.exe: C:\Users\ikord\OneDrive\Desktop\PROJEKT\ PROGRAMISTA\NAUKA\handbook\07-crates\firma\src\lib.rs C:\Users\ikord\OneDrive\Desktop\PROJEKT\ PROGRAMISTA\NAUKA\handbook\07-crates\firma\src\main.rs
